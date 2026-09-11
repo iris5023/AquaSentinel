@@ -1,0 +1,36 @@
+{
+  "auv": {
+    "start_position": {
+      "latitude": 12.9000,
+      "longitude": 74.8000,
+      "depth_m": 20
+    },
+    "speed_knots": 3.0,
+    "heading_deg": 90
+  },
+  "waypoints": [
+    {
+      "id": "WP1",
+      "latitude": 12.9010,
+      "longitude": 74.8020
+    },
+    {
+      "id": "WP2",
+      "latitude": 12.9030,
+      "longitude": 74.8050
+    },
+    {
+      "id": "WP3",
+      "latitude": 12.9050,
+      "longitude": 74.8020
+    }
+  ],
+  "sar": {
+    "search_radius_m": 100,
+    "detection_radius_m": 50,
+    "target": {
+        "latitude": 12.9020,
+        "longitude": 74.8030
+    }
+}
+}

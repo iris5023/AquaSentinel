@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AquaSentinel | AUV Mission Control</title>
+
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #06141f;
+    color: #eaf7ff;
+}
+
+header {
+    padding: 22px 30px;
+    background: linear-gradient(135deg, #082b40, #06141f);
+    border-bottom: 1px solid #16445d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand h1 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: 1px;
+}
+
+.brand p {
+    margin: 6px 0 0;
+    color: #8db8cc;
+    font-size: 13px;
+}
+
+.live-badge {
+    background: rgba(0, 255, 150, 0.1);
+    border: 1px solid #00d084;
+    color: #00e894;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.container {
+    max-width: 1250px;
+    margin: auto;
+    padding: 22px;
+}
+
+.alert-box {
+    display: none;
+    background: rgba(255, 50, 50, 0.12);
+    border: 1px solid #ff4d4d;
+    color: #ff7777;
+    padding: 15px 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.section-title {
+    margin: 25px 0 12px;
+    font-size: 18px;
+    color: #bdeaff;
+}
+
+.panel {
+    background: #0a202f;
+    border: 1px solid #16445d;
+    border-radius: 14px;
+    padding: 15px;
+}
+
+#map {
+    height: 450px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.map-info {
+    margin-top: 12px;
+    color: #9fc4d5;
+    font-size: 13px;
+    line-height: 2;
+}
+
+.route-line {
+    display: inline-block;
+    width: 30px;
+    height: 5px;
+    background: #0066ff;
+    border-radius: 5px;
+    margin-right: 6px;
+}
+
+.sar-route-line {
+    display: inline-block;
+    width: 30px;
+    height: 5px;
+    background: #ff9800;
+    border-radius: 5px;
+    margin-right: 6px;
+}
+
+.auv-3d-container {
+    height: 440px;
+    position: relative;
+    background: #021827;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#auv3d {
+    width: 100%;
+    height: 100%;
+}
+
+.three-d-title {
+    position: absolute;
+    top: 18px;
+    left: 20px;
+    z-index: 5;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.underwater-label {
+    position: absolute;
+    top: 45px;
+    left: 20px;
+    z-index: 5;
+    color: #79cbe9;
+    font-size: 12px;
+}
+
+.detection-label {
+    position: absolute;
+    top: 72px;
+    left: 20px;
+    z-index: 6;
+    background: rgba(255, 40, 40, 0.85);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    display: none;
+}
+
+.position-3d,
+.heading-3d {
+    position: absolute;
+    bottom: 18px;
+    z-index: 5;
+    background: rgba(0,0,0,0.55);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.position-3d {
+    left: 18px;
+}
+
+.heading-3d {
+    right: 18px;
+}
+
+.telemetry-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.telemetry-item {
+    background: #0d2939;
+    border: 1px solid #16445d;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.telemetry-label {
+    font-size: 10px;
+    color: #739bad;
+    letter-spacing: 1px;
+    margin-bottom: 7px;
+}
+
+.telemetry-value {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.telemetry-status {
+    color: #00e894;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+.card {
+    background: #0a202f;
+    border: 1px solid #16445d;
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.card h2 {
+    margin: 0 0 15px;
+    font-size: 18px;
+}
+
+.data {
+    color: #a9c8d6;
+    line-height: 1.9;
+    font-size: 14px;
+}
+
+.status {
+    color: white;
+    font-weight: bold;
+}
+
+.indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 7px;
+}
+
+.green {
+    background: #00d084;
+    box-shadow: 0 0 8px #00d084;
+}
+
+.orange {
+    background: #ffad33;
+    box-shadow: 0 0 8px #ffad33;
+}
+
+.red {
+    background: #ff4545;
+    box-shadow: 0 0 8px #ff4545;
+}
+
+footer {
+    text-align: center;
+    color: #527688;
+    font-size: 12px;
+    padding: 30px 0 10px;
+}
+
+@media (max-width: 800px) {
+
+    header {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .telemetry-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="brand">
+
+<h1>AquaSentinel</h1>
+
+<p>
+Autonomous Underwater Vehicle ·
+Environmental Intelligence System
+</p>
+
+</div>
+
+<div class="live-badge">
+● SYSTEM LIVE
+</div>
+
+</header>
+
+
+<div class="container">
+
+<div id="alertBox"
+     class="alert-box">
+</div>
+
+
+<div class="section-title">
+Mission Navigation
+</div>
+
+<div class="panel">
+
+<div id="map"></div>
+
+<div class="map-info">
+
+<span class="route-line"></span>
+Live AUV Route
+
+&nbsp;&nbsp;&nbsp;
+
+<span class="sar-route-line"></span>
+SAR Search Pattern
+
+&nbsp;&nbsp;&nbsp;
+
+Detection Zone
+
+</div>
+
+</div>
+
+
+<div class="section-title">
+Underwater Vehicle Visualization
+</div>
+
+<div class="panel">
+
+<div class="auv-3d-container">
+
+<div class="three-d-title">
+3D AquaSentinel AUV
+</div>
+
+<div class="underwater-label">
+Live Simulation Environment
+</div>
+
+<div id="detectionLabel"
+     class="detection-label">
+</div>
+
+<div id="position3D"
+     class="position-3d">
+Position: Waiting...
+</div>
+
+<div id="heading3D"
+     class="heading-3d">
+Heading: Waiting...
+</div>
+
+<div id="auv3d"></div>
+
+</div>
+
+</div>
+
+
+<div class="section-title">
+Live Telemetry
+</div>
+
+<div class="telemetry-grid">
+
+<div class="telemetry-item">
+<div class="telemetry-label">LATITUDE</div>
+<div class="telemetry-value" id="telemetryLatitude">--</div>
+</div>
+
+<div class="telemetry-item">
+<div class="telemetry-label">LONGITUDE</div>
+<div class="telemetry-value" id="telemetryLongitude">--</div>
+</div>
+
+<div class="telemetry-item">
+<div class="telemetry-label">DEPTH</div>
+<div class="telemetry-value" id="telemetryDepth">-- m</div>
+</div>
+
+<div class="telemetry-item">
+<div class="telemetry-label">SPEED</div>
+<div class="telemetry-value" id="telemetrySpeed">-- knots</div>
+</div>
+
+<div class="telemetry-item">
+<div class="telemetry-label">HEADING</div>
+<div class="telemetry-value" id="telemetryHeading">--</div>
+</div>
+
+<div class="telemetry-item">
+<div class="telemetry-label">CURRENT WAYPOINT</div>
+<div class="telemetry-value" id="telemetryWaypoint">--</div>
+</div>
+
+<div class="telemetry-item">
+<div class="telemetry-label">MISSION STATUS</div>
+<div class="telemetry-value telemetry-status" id="telemetryStatus">Waiting</div>
+</div>
+
+<div class="telemetry-item">
+<div class="telemetry-label">SIMULATION</div>
+<div class="telemetry-value telemetry-status">● LIVE</div>
+</div>
+
+</div>
+
+
+<div class="section-title">
+Mission Intelligence
+</div>
+
+<div class="dashboard">
+
+<div class="card">
+
+<h2>Navigation</h2>
+
+<div class="data"
+     id="navigation">
+Loading...
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>Search & Rescue</h2>
+
+<div class="data"
+     id="sar">
+Loading...
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>Pollution Monitoring</h2>
+
+<div class="data"
+     id="pollution">
+Loading...
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>Flood Early Warning</h2>
+
+<div class="data"
+     id="flood">
+Loading...
+</div>
+
+</div>
+
+</div>
+
+
+<footer>
+AquaSentinel · Autonomous Underwater Monitoring &
+Emergency Response Simulation
+</footer>
+
+</div>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+
+<script>
+
+// =====================================================
+// MAP
+// =====================================================
+
+const map =
+    L.map("map").setView(
+        [12.902, 74.803],
+        14
+    );
+
+
+L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        attribution:
+        "&copy; OpenStreetMap contributors"
+    }
+).addTo(map);
+
+
+// =====================================================
+// AUV MAP MARKER
+// =====================================================
+
+const auvIcon =
+    L.divIcon({
+
+        className: "",
+
+        html:
+        `<div style="
+            font-size:30px;
+            width:40px;
+            height:40px;
+            text-align:center;">
+            AUV
+        </div>`,
+
+        iconSize: [40,40],
+
+        iconAnchor: [20,20]
+
+    });
+
+
+const auvMarker =
+    L.marker(
+        [12.9000,74.8000],
+        {
+            icon: auvIcon
+        }
+    )
+    .addTo(map)
+    .bindPopup(
+        "<strong>AquaSentinel AUV</strong>"
+    );
+
+
+// =====================================================
+// ROUTE
+// =====================================================
+
+const routeLine =
+    L.polyline(
+        [],
+        {
+            color:"#0066ff",
+            weight:6
+        }
+    ).addTo(map);
+
+
+// =====================================================
+// SAR TARGET
+// =====================================================
+
+const sarTargetMarker =
+    L.circleMarker(
+        [12.9020,74.8030],
+        {
+            radius:10,
+            color:"red",
+            fillColor:"red",
+            fillOpacity:.8
+        }
+    )
+    .addTo(map)
+    .bindPopup(
+        "SAR Target"
+    );
+
+
+// =====================================================
+// SAR SEARCH PATTERN
+// =====================================================
+
+let sarSearchLine = null;
+
+let sarSearchMarkers = [];
+
+let sarDetectionCircle = null;
+
+
+async function loadSARSearchPattern() {
+
+    try {
+
+        const response =
+            await fetch("/sar-search");
+
+
+        const data =
+            await response.json();
+
+
+        const pattern =
+            data.search_pattern;
+
+
+        sarSearchMarkers.forEach(
+            marker =>
+            map.removeLayer(marker)
+        );
+
+
+        sarSearchMarkers = [];
+
+
+        if(sarSearchLine) {
+
+            map.removeLayer(
+                sarSearchLine
+            );
+
+        }
+
+
+        const points =
+            pattern.map(
+                p => [
+                    p.latitude,
+                    p.longitude
+                ]
+            );
+
+
+        sarSearchLine =
+            L.polyline(
+                points,
+                {
+                    color:"#ff9800",
+                    weight:5,
+                    dashArray:"10,8"
+                }
+            )
+            .addTo(map);
+
+
+        pattern.forEach(
+            point => {
+
+                const marker =
+                    L.circleMarker(
+                        [
+                            point.latitude,
+                            point.longitude
+                        ],
+                        {
+                            radius:6,
+                            color:"#ff9800",
+                            fillColor:"#ff9800",
+                            fillOpacity:1
+                        }
+                    )
+                    .addTo(map);
+
+
+                sarSearchMarkers.push(
+                    marker
+                );
+
+            }
+        );
+
+
+        sarDetectionCircle =
+            L.circle(
+                [12.9020,74.8030],
+                {
+                    radius:50,
+                    color:"#2196f3",
+                    fillColor:"#2196f3",
+                    fillOpacity:.12
+                }
+            )
+            .addTo(map);
+
+    }
+
+    catch(error) {
+
+        console.error(
+            "SAR pattern error:",
+            error
+        );
+
+    }
+
+}
+
+
+loadSARSearchPattern();
+
+
+// =====================================================
+// DETECTION MAP
+// =====================================================
+
+let detectionMapMarker = null;
+
+
+function updateDetectionMap(sar) {
+
+    if(!sar.detected) {
+
+        if(detectionMapMarker) {
+
+            map.removeLayer(
+                detectionMapMarker
+            );
+
+            detectionMapMarker = null;
+
+        }
+
+        return;
+
+    }
+
+
+    let label =
+        "SAR DETECTION";
+
+
+    if(
+        sar.yolo &&
+        sar.yolo.swimmer_detected
+    ) {
+
+        label =
+            "SURVIVOR DETECTED";
+
+    }
+
+    else if(
+        sar.yolo &&
+        sar.yolo.boat_detected
+    ) {
+
+        label =
+            "BOAT DETECTED";
+
+    }
+
+
+    const icon =
+        L.divIcon({
+
+            className:"",
+
+            html:
+            `<div style="
+                background:#ff3333;
+                color:white;
+                padding:7px 10px;
+                border-radius:8px;
+                font-weight:bold;
+                font-size:12px;
+                white-space:nowrap;
+                border:2px solid white;">
+                ${label}
+            </div>`,
+
+            iconSize:[160,35],
+
+            iconAnchor:[80,35]
+
+        });
+
+
+    if(detectionMapMarker) {
+
+        detectionMapMarker.setIcon(
+            icon
+        );
+
+    }
+
+    else {
+
+        detectionMapMarker =
+            L.marker(
+                [
+                    sar.target.latitude,
+                    sar.target.longitude
+                ],
+                {
+                    icon:icon
+                }
+            )
+            .addTo(map);
+
+    }
+
+}
+
+
+// =====================================================
+// THREE.JS
+// =====================================================
+
+const container =
+    document.getElementById(
+        "auv3d"
+    );
+
+
+const scene =
+    new THREE.Scene();
+
+
+scene.background =
+    new THREE.Color(
+        0x021827
+    );
+
+
+const camera =
+    new THREE.PerspectiveCamera(
+        45,
+        container.clientWidth /
+        container.clientHeight,
+        .1,
+        100
+    );
+
+
+camera.position.set(
+    0,
+    2,
+    8
+);
+
+
+camera.lookAt(
+    0,
+    0,
+    0
+);
+
+
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias:true,
+        alpha:true
+    });
+
+
+renderer.setPixelRatio(
+    window.devicePixelRatio
+);
+
+
+renderer.setSize(
+    container.clientWidth,
+    container.clientHeight
+);
+
+
+container.appendChild(
+    renderer.domElement
+);
+
+
+// =====================================================
+// LIGHTS
+// =====================================================
+
+scene.add(
+    new THREE.AmbientLight(
+        0x88ccff,
+        1.5
+    )
+);
+
+
+const directionalLight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        2
+    );
+
+
+directionalLight.position.set(
+    5,
+    8,
+    5
+);
+
+
+scene.add(
+    directionalLight
+);
+
+
+// =====================================================
+// SEABED
+// =====================================================
+
+const seabed =
+    new THREE.Mesh(
+
+        new THREE.PlaneGeometry(
+            30,
+            30
+        ),
+
+        new THREE.MeshPhongMaterial({
+            color:0x263238
+        })
+
+    );
+
+
+seabed.rotation.x =
+    -Math.PI / 2;
+
+
+seabed.position.y =
+    -2.5;
+
+
+scene.add(
+    seabed
+);
+
+
+// =====================================================
+// PARTICLES
+// =====================================================
+
+const particleGeometry =
+    new THREE.BufferGeometry();
+
+
+const particleCount =
+    400;
+
+
+const particlePositions =
+    new Float32Array(
+        particleCount * 3
+    );
+
+
+for(
+    let i = 0;
+    i < particleCount;
+    i++
+) {
+
+    particlePositions[i * 3] =
+        -10 +
+        Math.random() * 20;
+
+
+    particlePositions[i * 3 + 1] =
+        -2 +
+        Math.random() * 8;
+
+
+    particlePositions[i * 3 + 2] =
+        -10 +
+        Math.random() * 20;
+
+}
+
+
+particleGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(
+        particlePositions,
+        3
+    )
+);
+
+
+const particles =
+    new THREE.Points(
+
+        particleGeometry,
+
+        new THREE.PointsMaterial({
+
+            color:0x9be7ff,
+
+            size:.035,
+
+            transparent:true,
+
+            opacity:.7
+
+        })
+
+    );
+
+
+scene.add(
+    particles
+);
+
+
+// =====================================================
+// ACTUAL BLENDER AUV MODEL
+// =====================================================
+
+let auv =
+    new THREE.Group();
+
+
+scene.add(
+    auv
+);
+
+
+const loader =
+    new THREE.GLTFLoader();
+
+
+loader.load(
+
+    "AquaSentinel_Underwater.glb",
+
+    function(gltf) {
+
+        const model =
+            gltf.scene;
+
+
+        auv.add(
+            model
+        );
+
+
+        const box =
+            new THREE.Box3()
+            .setFromObject(
+                model
+            );
+
+
+        const size =
+            box.getSize(
+                new THREE.Vector3()
+            );
+
+
+        const center =
+            box.getCenter(
+                new THREE.Vector3()
+            );
+
+
+        model.position.x -=
+            center.x;
+
+
+        model.position.y -=
+            center.y;
+
+
+        model.position.z -=
+            center.z;
+
+
+        const maxDimension =
+            Math.max(
+                size.x,
+                size.y,
+                size.z
+            );
+
+
+        if(maxDimension > 0) {
+
+            const scale =
+                3 / maxDimension;
+
+
+            model.scale.setScalar(
+                scale
+            );
+
+        }
+
+
+        console.log(
+            "AquaSentinel_Underwater.glb loaded"
+        );
+
+    },
+
+    function(xhr) {
+
+        if(xhr.total) {
+
+            console.log(
+                "GLB loading:",
+                (
+                    xhr.loaded /
+                    xhr.total *
+                    100
+                ).toFixed(0) +
+                "%"
+            );
+
+        }
+
+    },
+
+    function(error) {
+
+        console.error(
+            "GLB LOAD ERROR:",
+            error
+        );
+
+    }
+
+);
+
+
+// =====================================================
+// BOAT
+// =====================================================
+
+let detectedBoat = null;
+
+
+function createBoat() {
+
+    const boat =
+        new THREE.Group();
+
+
+    const hull =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                1.8,
+                .35,
+                .7
+            ),
+
+            new THREE.MeshPhongMaterial({
+                color:0xffffff
+            })
+
+        );
+
+
+    boat.add(
+        hull
+    );
+
+
+    const cabin =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .7,
+                .45,
+                .5
+            ),
+
+            new THREE.MeshPhongMaterial({
+                color:0xff3333
+            })
+
+        );
+
+
+    cabin.position.y =
+        .35;
+
+
+    boat.add(
+        cabin
+    );
+
+
+    const mast =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .04,
+                .04,
+                .7,
+                8
+            ),
+
+            new THREE.MeshPhongMaterial({
+                color:0x333333
+            })
+
+        );
+
+
+    mast.position.y =
+        .8;
+
+
+    boat.add(
+        mast
+    );
+
+
+    const detectionLight =
+        new THREE.PointLight(
+            0xff3333,
+            2,
+            3
+        );
+
+
+    detectionLight.position.y =
+        .9;
+
+
+    boat.add(
+        detectionLight
+    );
+
+
+    scene.add(
+        boat
+    );
+
+
+    return boat;
+
+}
+
+
+// =====================================================
+// SWIMMER
+// =====================================================
+
+let detectedSwimmer = null;
+
+
+function createSwimmer() {
+
+    const swimmer =
+        new THREE.Group();
+
+
+    const head =
+        new THREE.Mesh(
+
+            new THREE.SphereGeometry(
+                .22,
+                16,
+                16
+            ),
+
+            new THREE.MeshPhongMaterial({
+                color:0xffcc99
+            })
+
+        );
+
+
+    head.position.y =
+        .45;
+
+
+    swimmer.add(
+        head
+    );
+
+
+    // FIXED:
+    // Three.js r128 does not have CapsuleGeometry.
+    // Using CylinderGeometry instead.
+
+    const body =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .18,
+                .18,
+                .9,
+                16
+            ),
+
+            new THREE.MeshPhongMaterial({
+                color:0xff4444
+            })
+
+        );
+
+
+    body.position.y =
+        0;
+
+
+    swimmer.add(
+        body
+    );
+
+
+    const arms =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .7,
+                .08,
+                .08
+            ),
+
+            new THREE.MeshPhongMaterial({
+                color:0xffcc99
+            })
+
+        );
+
+
+    arms.rotation.z =
+        .2;
+
+
+    arms.position.y =
+        .15;
+
+
+    swimmer.add(
+        arms
+    );
+
+
+    const detectionLight =
+        new THREE.PointLight(
+            0xff4444,
+            2,
+            3
+        );
+
+
+    detectionLight.position.y =
+        .8;
+
+
+    swimmer.add(
+        detectionLight
+    );
+
+
+    scene.add(
+        swimmer
+    );
+
+
+    return swimmer;
+
+}
+
+
+// =====================================================
+// BBOX TO 3D
+// =====================================================
+
+function bboxTo3DPosition(bbox) {
+
+    if(!bbox) {
+
+        return {
+            x:0,
+            y:0,
+            z:-3
+        };
+
+    }
+
+
+    const frameWidth =
+        640;
+
+
+    const frameHeight =
+        640;
+
+
+    const centerX =
+        (bbox.x1 + bbox.x2) / 2;
+
+
+    const centerY =
+        (bbox.y1 + bbox.y2) / 2;
+
+
+    const boxWidth =
+        bbox.x2 - bbox.x1;
+
+
+    const boxHeight =
+        bbox.y2 - bbox.y1;
+
+
+    const normalizedX =
+        centerX /
+        frameWidth -
+        .5;
+
+
+    const normalizedY =
+        centerY /
+        frameHeight -
+        .5;
+
+
+    const boxSize =
+        Math.max(
+            boxWidth,
+            boxHeight
+        );
+
+
+    let depth =
+        -6 +
+        (boxSize / 100) * 3;
+
+
+    depth =
+        Math.max(
+            -6,
+            Math.min(
+                -2,
+                depth
+            )
+        );
+
+
+    return {
+
+        x:
+        normalizedX * 8,
+
+        y:
+        -normalizedY * 5,
+
+        z:
+        depth
+
+    };
+
+}
+
+
+// =====================================================
+// UPDATE DETECTED OBJECTS
+// =====================================================
+
+function updateDetectedObjects(sar) {
+
+    const yolo =
+        sar.yolo || {};
+
+
+    const detections =
+        yolo.detections || [];
+
+
+    const boatDetection =
+        detections
+        .filter(
+            d =>
+            d.class === "boat"
+        )
+        .sort(
+            (a,b) =>
+            b.confidence -
+            a.confidence
+        )[0];
+
+
+    const swimmerDetection =
+        detections
+        .filter(
+            d =>
+            d.class === "swimmer"
+        )
+        .sort(
+            (a,b) =>
+            b.confidence -
+            a.confidence
+        )[0];
+
+
+    // =================================================
+    // BOAT
+    // =================================================
+
+    if(boatDetection) {
+
+        if(!detectedBoat) {
+
+            detectedBoat =
+                createBoat();
+
+        }
+
+
+        const position =
+            bboxTo3DPosition(
+                boatDetection.bbox
+            );
+
+
+        detectedBoat.position.x =
+            auv.position.x +
+            position.x;
+
+
+        detectedBoat.position.y =
+            auv.position.y +
+            position.y;
+
+
+        detectedBoat.position.z =
+            auv.position.z +
+            position.z;
+
+    }
+
+    else {
+
+        if(detectedBoat) {
+
+            scene.remove(
+                detectedBoat
+            );
+
+            detectedBoat = null;
+
+        }
+
+    }
+
+
+    // =================================================
+    // SWIMMER
+    // =================================================
+
+    if(swimmerDetection) {
+
+        if(!detectedSwimmer) {
+
+            detectedSwimmer =
+                createSwimmer();
+
+        }
+
+
+        const position =
+            bboxTo3DPosition(
+                swimmerDetection.bbox
+            );
+
+
+        detectedSwimmer.position.x =
+            auv.position.x +
+            position.x;
+
+
+        detectedSwimmer.position.y =
+            auv.position.y +
+            position.y;
+
+
+        detectedSwimmer.position.z =
+            auv.position.z +
+            position.z;
+
+    }
+
+    else {
+
+        if(detectedSwimmer) {
+
+            scene.remove(
+                detectedSwimmer
+            );
+
+            detectedSwimmer = null;
+
+        }
+
+    }
+
+
+    // =================================================
+    // LABEL
+    // =================================================
+
+    const label =
+        document.getElementById(
+            "detectionLabel"
+        );
+
+
+    if(swimmerDetection) {
+
+        label.innerHTML =
+            "SURVIVOR DETECTED";
+
+
+        label.style.display =
+            "block";
+
+    }
+
+    else if(boatDetection) {
+
+        label.innerHTML =
+            "BOAT DETECTED";
+
+
+        label.style.display =
+            "block";
+
+    }
+
+    else {
+
+        label.style.display =
+            "none";
+
+    }
+
+}
+
+
+// =====================================================
+// 3D MOVEMENT
+// =====================================================
+
+let targetX = 0;
+
+let targetZ = 0;
+
+let currentX = 0;
+
+let currentZ = 0;
+
+let targetHeading = 0;
+
+let currentHeading = 0;
+
+
+const startLatitude =
+    12.9000;
+
+
+const startLongitude =
+    74.8000;
+
+
+function update3DPosition(
+    latitude,
+    longitude
+) {
+
+    targetX =
+        (longitude -
+        startLongitude) *
+        80000;
+
+
+    targetZ =
+        -(latitude -
+        startLatitude) *
+        80000;
+
+
+    targetX =
+        Math.max(
+            -3,
+            Math.min(
+                3,
+                targetX
+            )
+        );
+
+
+    targetZ =
+        Math.max(
+            -2,
+            Math.min(
+                2,
+                targetZ
+            )
+        );
+
+
+    document.getElementById(
+        "position3D"
+    ).innerHTML =
+        "Position: " +
+        latitude.toFixed(6) +
+        ", " +
+        longitude.toFixed(6);
+
+}
+
+
+function update3DHeading(
+    heading
+) {
+
+    targetHeading =
+        Math.PI / 2 -
+        heading *
+        Math.PI / 180;
+
+}
+
+
+// =====================================================
+// ANIMATION
+// =====================================================
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    currentX +=
+        (targetX -
+        currentX) *
+        .05;
+
+
+    currentZ +=
+        (targetZ -
+        currentZ) *
+        .05;
+
+
+    auv.position.x =
+        currentX;
+
+
+    auv.position.z =
+        currentZ;
+
+
+    let difference =
+        targetHeading -
+        currentHeading;
+
+
+    while(
+        difference > Math.PI
+    ) {
+
+        difference -=
+            Math.PI * 2;
+
+    }
+
+
+    while(
+        difference < -Math.PI
+    ) {
+
+        difference +=
+            Math.PI * 2;
+
+    }
+
+
+    currentHeading +=
+        difference *
+        .05;
+
+
+    auv.rotation.y =
+        currentHeading;
+
+
+    auv.position.y =
+        Math.sin(
+            Date.now() *
+            .002
+        ) * .12;
+
+
+    particles.rotation.y +=
+        .0003;
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+animate();
+
+
+// =====================================================
+// RESIZE
+// =====================================================
+
+window.addEventListener(
+    "resize",
+    function() {
+
+        camera.aspect =
+            container.clientWidth /
+            container.clientHeight;
+
+
+        camera.updateProjectionMatrix();
+
+
+        renderer.setSize(
+            container.clientWidth,
+            container.clientHeight
+        );
+
+    }
+);
+
+
+// =====================================================
+// ROUTE
+// =====================================================
+
+async function loadRoute() {
+
+    try {
+
+        const response =
+            await fetch("/route");
+
+
+        const data =
+            await response.json();
+
+
+        const points =
+            data.route.map(
+                p => [
+                    p.latitude,
+                    p.longitude
+                ]
+            );
+
+
+        routeLine.setLatLngs(
+            points
+        );
+
+    }
+
+    catch(error) {
+
+        console.error(
+            "Route error:",
+            error
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// HEADING NAME
+// =====================================================
+
+function headingName(
+    degrees
+) {
+
+    degrees =
+        (degrees + 360) % 360;
+
+
+    if(
+        degrees >= 337.5 ||
+        degrees < 22.5
+    )
+        return "North";
+
+
+    if(degrees < 67.5)
+        return "North-East";
+
+
+    if(degrees < 112.5)
+        return "East";
+
+
+    if(degrees < 157.5)
+        return "South-East";
+
+
+    if(degrees < 202.5)
+        return "South";
+
+
+    if(degrees < 247.5)
+        return "South-West";
+
+
+    if(degrees < 292.5)
+        return "West";
+
+
+    return "North-West";
+
+}
+
+
+// =====================================================
+// DASHBOARD UPDATE
+// =====================================================
+
+async function updateDashboard() {
+
+    try {
+
+        const response =
+            await fetch("/data");
+
+
+        const data =
+            await response.json();
+
+
+        // =================================================
+        // NAVIGATION
+        // =================================================
+
+        const navigation =
+            data.navigation;
+
+
+        const position =
+            navigation.position;
+
+
+        document.getElementById(
+            "telemetryLatitude"
+        ).innerHTML =
+            position.latitude;
+
+
+        document.getElementById(
+            "telemetryLongitude"
+        ).innerHTML =
+            position.longitude;
+
+
+        document.getElementById(
+            "telemetryDepth"
+        ).innerHTML =
+            position.depth_m +
+            " m";
+
+
+        document.getElementById(
+            "telemetrySpeed"
+        ).innerHTML =
+            navigation.speed_knots +
+            " knots";
+
+
+        document.getElementById(
+            "telemetryHeading"
+        ).innerHTML =
+            navigation.heading_deg +
+            "° " +
+            headingName(
+                navigation.heading_deg
+            );
+
+
+        document.getElementById(
+            "telemetryWaypoint"
+        ).innerHTML =
+            navigation.current_waypoint ||
+            "Complete";
+
+
+        document.getElementById(
+            "telemetryStatus"
+        ).innerHTML =
+            navigation.status;
+
+
+        document.getElementById(
+            "heading3D"
+        ).innerHTML =
+            "Heading: " +
+            navigation.heading_deg +
+            "° " +
+            headingName(
+                navigation.heading_deg
+            );
+
+
+        document.getElementById(
+            "navigation"
+        ).innerHTML =
+
+            `<span class="indicator green"></span>
+
+            Position:
+            ${position.latitude},
+            ${position.longitude}
+
+            <br>
+
+            Depth:
+            ${position.depth_m} m
+
+            <br>
+
+            Speed:
+            ${navigation.speed_knots} knots
+
+            <br>
+
+            Heading:
+            ${navigation.heading_deg}°
+
+            <br>
+
+            Status:
+            <span class="status">
+            ${navigation.status}
+            </span>
+
+            <br>
+
+            Waypoint:
+            ${navigation.current_waypoint || "Complete"}`;
+
+
+        // =================================================
+        // SAR
+        // =================================================
+
+        const sar =
+            data.sar;
+
+
+        updateDetectedObjects(
+            sar
+        );
+
+
+        updateDetectionMap(
+            sar
+        );
+
+
+        const sarColor =
+            sar.alert
+            ? "red"
+            : "green";
+
+
+        document.getElementById(
+            "sar"
+        ).innerHTML =
+
+            `<span class="indicator ${sarColor}"></span>
+
+            Status:
+            <span class="status">
+            ${sar.status}
+            </span>
+
+            <br>
+
+            Distance to Target:
+            ${sar.distance_to_target_m ?? "--"} m
+
+            <br>
+
+            Detection Radius:
+            ${sar.detection_radius_m ?? "--"} m
+
+            <br>
+
+            Target Detected:
+            ${sar.detected ? "YES" : "NO"}
+
+            <br>
+
+            Alert:
+            ${sar.alert ? "ACTIVE" : "None"}
+
+            <br>
+
+            Alert Type:
+            ${sar.alert_type || "None"}
+
+            <br>
+
+            Boat:
+            ${sar.yolo?.boat_detected
+                ? "DETECTED"
+                : "Not detected"}
+
+            <br>
+
+            Swimmer:
+            ${sar.yolo?.swimmer_detected
+                ? "DETECTED"
+                : "Not detected"}
+
+            <br>
+
+            YOLO Objects:
+            ${sar.yolo?.detections?.length || 0}`;
+
+
+        // =================================================
+        // POLLUTION
+        // =================================================
+
+        const pollution =
+            data.pollution;
+
+
+        const pollutionColor =
+            pollution.alert
+            ? "red"
+            : "green";
+
+
+        const metrics =
+            pollution.metrics || {};
+
+
+        document.getElementById(
+            "pollution"
+        ).innerHTML =
+
+            `<span class="indicator ${pollutionColor}"></span>
+
+            Water Type:
+            ${pollution.water_type || "Unknown"}
+
+            <br>
+
+            Depth:
+            ${metrics.depth_m ?? "--"} m
+
+            <br>
+
+            pH:
+            ${metrics.ph ?? "--"}
+
+            <br>
+
+            Turbidity:
+            ${metrics.turbidity_ntu ?? "--"} NTU
+
+            <br>
+
+            Dissolved Oxygen:
+            ${metrics.dissolved_oxygen_mgL ?? "--"} mg/L
+
+            <br>
+
+            Heavy Metals:
+            ${metrics.heavy_metals_ppm ?? "--"} ppm
+
+            <br>
+
+            Salinity:
+            ${metrics.salinity_ppt ?? "--"} ppt
+
+            <br>
+
+            Status:
+            <span class="status">
+            ${pollution.status}
+            </span>
+
+            <br>
+
+            Alert:
+            ${pollution.alert ? "ACTIVE" : "None"}`;
+
+
+        // =================================================
+        // FLOOD
+        // =================================================
+
+        const flood =
+            data.flood;
+
+
+        const floodColor =
+            flood.alert
+            ? "red"
+            : "green";
+
+
+        document.getElementById(
+            "flood"
+        ).innerHTML =
+
+            `<span class="indicator ${floodColor}"></span>
+
+            Water Level:
+            ${flood.water_level ?? "--"} m
+
+            <br>
+
+            Rate of Change:
+            ${flood.rate_m_per_min ?? "--"} m/min
+
+            <br>
+
+            Status:
+            <span class="status">
+            ${flood.status}
+            </span>
+
+            <br>
+
+            Alert:
+            ${flood.alert ? "ACTIVE" : "None"}
+
+            <br>
+
+            Alert Type:
+            ${flood.alert_type || "None"}
+
+            <br>
+
+            Action:
+            ${flood.action || "--"}`;
+
+
+        // =================================================
+        // ALERT
+        // =================================================
+
+        const alerts = [];
+
+
+        if(sar.alert) {
+
+            alerts.push(
+                "SAR TARGET DETECTED"
+            );
+
+        }
+
+
+        if(pollution.alert) {
+
+            alerts.push(
+                "HIGH POLLUTION DETECTED"
+            );
+
+        }
+
+
+        if(flood.alert) {
+
+            alerts.push(
+                "FLOOD RISK DETECTED"
+            );
+
+        }
+
+
+        const alertBox =
+            document.getElementById(
+                "alertBox"
+            );
+
+
+        if(alerts.length > 0) {
+
+            alertBox.innerHTML =
+                alerts.join(
+                    " | "
+                );
+
+
+            alertBox.style.display =
+                "block";
+
+        }
+
+        else {
+
+            alertBox.style.display =
+                "none";
+
+        }
+
+
+        // =================================================
+        // MAP
+        // =================================================
+
+        auvMarker.setLatLng([
+            position.latitude,
+            position.longitude
+        ]);
+
+
+        // =================================================
+        // 3D
+        // =================================================
+
+        update3DPosition(
+            position.latitude,
+            position.longitude
+        );
+
+
+        update3DHeading(
+            navigation.heading_deg
+        );
+
+
+        await loadRoute();
+
+    }
+
+    catch(error) {
+
+        console.error(
+            "Dashboard update failed:",
+            error
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// START
+// =====================================================
+
+updateDashboard();
+
+
+setInterval(
+    updateDashboard,
+    2000
+);
+
+</script>
+
+</body>
+</html>
