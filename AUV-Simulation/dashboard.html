@@ -313,8 +313,50 @@ Environmental Intelligence System
 
 <div class="container">
 
-<div id="alertBox"
-     class="alert-box">
+<div id="authorityAlertCard"
+     class="alert-box"
+     style="
+        display:block;
+        margin-bottom:20px;
+        padding:20px;
+     ">
+
+    <strong>LOCAL AUTHORITY ALERT</strong>
+
+    <br><br>
+
+    <span id="authorityAlertStatus">
+        Status: MONITORING
+    </span>
+
+    <br>
+
+    <span id="authorityAlertRisk">
+        Risk: --
+    </span>
+
+    <br>
+
+    <span id="authorityAlertLocation">
+        Location: --
+    </span>
+
+    <br>
+
+    <span id="authorityAlertType">
+        Alert Type: --
+    </span>
+
+    <br><br>
+
+    <strong>Action:</strong>
+
+    <br>
+
+    <span id="authorityAlertAction">
+        Monitoring system
+    </span>
+
 </div>
 
 
@@ -795,6 +837,11 @@ function updateDetectionMap(sar) {
 
 
     if(detectionMapMarker) {
+
+        detectionMapMarker.setLatLng([
+            sar.target.latitude,
+            sar.target.longitude
+        ]);
 
         detectionMapMarker.setIcon(
             icon
@@ -1954,7 +2001,9 @@ async function updateDashboard() {
     try {
 
         const response =
-            await fetch("/data");
+            await fetch("/data?ts=" + Date.now(), {
+                cache: "no-store"
+            });
 
 
         const data =
@@ -2270,68 +2319,116 @@ async function updateDashboard() {
 
             Action:
             ${flood.action || "--"}`;
+            // =====================================================
+    // LOCAL AUTHORITY ALERT
+    // =====================================================
+
+    const authorityAlert =
+        data.authority_alert || {};
+
+    const authorityAlertCard =
+        document.getElementById(
+            "authorityAlertCard"
+        );
+
+    const authorityAlertStatus =
+        document.getElementById(
+            "authorityAlertStatus"
+        );
+
+    const authorityAlertRisk =
+        document.getElementById(
+            "authorityAlertRisk"
+        );
+
+    const authorityAlertLocation =
+        document.getElementById(
+            "authorityAlertLocation"
+        );
+
+    const authorityAlertType =
+        document.getElementById(
+            "authorityAlertType"
+        );
+
+    const authorityAlertAction =
+        document.getElementById(
+            "authorityAlertAction"
+        );
 
 
-        // =================================================
-        // ALERT
-        // =================================================
+    if(
+        authorityAlert.status ===
+        "ALERT SENT"
+    ) {
 
-        const alerts = [];
+        authorityAlertStatus.innerHTML =
+            "Status: " +
+            authorityAlert.status;
 
-
-        if(sar.alert) {
-
-            alerts.push(
-                "SAR TARGET DETECTED"
+        authorityAlertRisk.innerHTML =
+            "Risk: " +
+            (
+                authorityAlert.risk ||
+                "--"
             );
 
-        }
+        const latitude =
+            authorityAlert.location?.latitude;
 
+        const longitude =
+            authorityAlert.location?.longitude;
 
-        if(pollution.alert) {
-
-            alerts.push(
-                "HIGH POLLUTION DETECTED"
+        authorityAlertLocation.innerHTML =
+            "Location: " +
+            (
+                latitude !== undefined
+                    ? Number(latitude).toFixed(6)
+                    : "--"
+            ) +
+            ", " +
+            (
+                longitude !== undefined
+                    ? Number(longitude).toFixed(6)
+                    : "--"
             );
 
-        }
-
-
-        if(flood.alert) {
-
-            alerts.push(
-                "FLOOD RISK DETECTED"
+        authorityAlertType.innerHTML =
+            "Alert Type: " +
+            (
+                authorityAlert.type ||
+                "--"
             );
 
-        }
+        authorityAlertAction.innerHTML =
+            authorityAlert.action ||
+            "--";
 
+        authorityAlertCard.style.display =
+            "block";
 
-        const alertBox =
-            document.getElementById(
-                "alertBox"
-            );
+    }
+    else {
 
+        authorityAlertStatus.innerHTML =
+            "Status: NO ACTIVE ALERT";
 
-        if(alerts.length > 0) {
+        authorityAlertRisk.innerHTML =
+            "Risk: --";
 
-            alertBox.innerHTML =
-                alerts.join(
-                    " | "
-                );
+        authorityAlertLocation.innerHTML =
+            "Location: --";
 
+        authorityAlertType.innerHTML =
+            "Alert Type: --";
 
-            alertBox.style.display =
-                "block";
+        authorityAlertAction.innerHTML =
+            "Monitoring system";
 
-        }
-
-        else {
-
-            alertBox.style.display =
-                "none";
-
-        }
-
+        authorityAlertCard.style.display =
+            "block";
+    }
+            
 
         // =================================================
         // MAP
