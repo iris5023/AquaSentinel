@@ -7,7 +7,7 @@ import cv2
 from navigation.navigation import Navigation
 from sar.sar import SAR
 from flood.flood import Flood
-
+from alerts.alert_manager import AlertManager
 
 class Simulator:
 
@@ -25,6 +25,7 @@ class Simulator:
         )
 
         self.flood = Flood()
+        self.alert_manager = AlertManager()
 
         self.pollution_api_url = (
             "http://127.0.0.1:5001/api/pollution"
@@ -153,12 +154,21 @@ class Simulator:
 
         # Flood
         flood_data = self.flood.generate_reading()
+        # Authority Alerts
+        authority_alert = self.alert_manager.process(
+            sar_data,
+            pollution_data,
+            flood_data,
+            auv_lat,
+            auv_lon
+        )
 
         return {
             "navigation": self.navigation.get_data(),
             "sar": sar_data,
             "pollution": pollution_data,
-            "flood": flood_data
+            "flood": flood_data,
+            "authority_alert": authority_alert
         }
 
     def run(self, steps=100, dt_seconds=10):
