@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>
+AquaSentinel - Local Authority Dashboard
+</title>
+
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #07111f;
+    color: #e8f1ff;
+}
+
+.header {
+    height: 72px;
+    background: #0b1728;
+    border-bottom: 1px solid #20324a;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 30px;
+}
+
+.brand {
+    font-size: 25px;
+    font-weight: 700;
+}
+
+.subtitle {
+    color: #8fa4bd;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.live {
+    color: #69e6a7;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #69e6a7;
+    margin-right: 7px;
+}
+
+.container {
+    width: 94%;
+    max-width: 1400px;
+    margin: 25px auto 40px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.page-description {
+    color: #8fa4bd;
+    font-size: 13px;
+    margin-bottom: 22px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 18px;
+}
+
+.card {
+    background: #0c192b;
+    border: 1px solid #20324a;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.card-title {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 17px;
+}
+
+/* ALERT */
+
+.alert-card {
+    background: #0a1626;
+    border: 1px solid #31465f;
+    border-radius: 9px;
+    padding: 20px;
+}
+
+.alert-card.active {
+    border-color: #d85d5d;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.alert-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.alert-main {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.alert-item {
+    background: #0e2034;
+    border: 1px solid #1e354e;
+    border-radius: 8px;
+    padding: 13px;
+}
+
+.label {
+    color: #8198b1;
+    font-size: 10px;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+}
+
+.value {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.action-box {
+    margin-top: 15px;
+    background: #0e2034;
+    border: 1px solid #1e354e;
+    border-radius: 8px;
+    padding: 13px;
+}
+
+.action-value {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* METRICS */
+
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.metric {
+    background: #0e2034;
+    border: 1px solid #1e354e;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.metric-value {
+    font-size: 21px;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.metric-small {
+    color: #8198b1;
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+/* STATUS */
+
+.status-list {
+    display: grid;
+    gap: 10px;
+}
+
+.status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 13px 14px;
+
+    background: #0e2034;
+    border: 1px solid #1e354e;
+    border-radius: 8px;
+}
+
+.status-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #66788c;
+}
+
+.status-dot.ok {
+    background: #69e6a7;
+}
+
+.status-dot.warning {
+    background: #e7bd68;
+}
+
+.status-dot.danger {
+    background: #ed6b6b;
+}
+
+.status-text {
+    color: #91a6bd;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* MAP */
+
+.map-card {
+    grid-column: 1 / -1;
+}
+
+#authorityMap {
+    height: 430px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #20324a;
+}
+
+/* TABLE */
+
+.incident-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.incident-table th,
+.incident-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #1e3046;
+    font-size: 12px;
+}
+
+.incident-table th {
+    color: #8198b1;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.empty {
+    color: #71879f;
+    padding: 18px 0;
+}
+
+.footer {
+    color: #62778f;
+    font-size: 11px;
+    text-align: center;
+    margin-top: 25px;
+}
+
+@media (max-width: 900px) {
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .map-card {
+        grid-column: auto;
+    }
+
+    .alert-main {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 550px) {
+
+    .header {
+        padding: 0 16px;
+    }
+
+    .alert-main,
+    .metrics {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header class="header">
+
+    <div>
+
+        <div class="brand">
+            AquaSentinel
+        </div>
+
+        <div class="subtitle">
+            Local Authority Command Dashboard
+        </div>
+
+    </div>
+
+
+    <div class="live">
+
+        <span class="dot"></span>
+
+        SYSTEM LIVE
+
+    </div>
+
+</header>
+
+
+
+<main class="container">
+
+
+    <div class="page-title">
+        Local Authority Dashboard
+    </div>
+
+
+    <div class="page-description">
+        Real-time incident monitoring and response information received from the AquaSentinel system.
+    </div>
+
+
+
+    <div class="grid">
+
+
+
+        <!-- CURRENT AUTHORITY ALERT -->
+
+        <section class="card">
+
+            <div class="card-title">
+                Current Authority Alert
+            </div>
+
+
+            <div id="alertCard"
+                 class="alert-card">
+
+
+                <div class="alert-header">
+
+                    <div id="alertTitle"
+                         class="alert-title">
+
+                        No Active Alert
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="alert-main">
+
+
+                    <div class="alert-item">
+
+                        <div class="label">
+                            Risk
+                        </div>
+
+                        <div id="alertRisk"
+                             class="value">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="alert-item">
+
+                        <div class="label">
+                            Alert Type
+                        </div>
+
+                        <div id="alertType"
+                             class="value">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="alert-item">
+
+                        <div class="label">
+                            Latitude
+                        </div>
+
+                        <div id="alertLat"
+                             class="value">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="alert-item">
+
+                        <div class="label">
+                            Longitude
+                        </div>
+
+                        <div id="alertLon"
+                             class="value">
+
+                            --
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="alert-item">
+
+                        <div class="label">
+                            SMS Status
+                        </div>
+
+                        <div id="smsStatus"
+                             class="value">
+
+                            NOT SENT
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="action-box">
+
+                    <div class="label">
+                        Recommended Action
+                    </div>
+
+                    <div id="alertAction"
+                         class="action-value">
+
+                        Monitoring system
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- AUV STATUS -->
+
+        <section class="card">
+
+            <div class="card-title">
+                AUV Status
+            </div>
+
+
+            <div class="metrics">
+
+
+                <div class="metric">
+
+                    <div class="label">
+                        Latitude
+                    </div>
+
+                    <div id="auvLat"
+                         class="metric-value">
+
+                        --
+
+                    </div>
+
+                    <div class="metric-small">
+                        Current AUV position
+                    </div>
+
+                </div>
+
+
+
+                <div class="metric">
+
+                    <div class="label">
+                        Longitude
+                    </div>
+
+                    <div id="auvLon"
+                         class="metric-value">
+
+                        --
+
+                    </div>
+
+                    <div class="metric-small">
+                        Current AUV position
+                    </div>
+
+                </div>
+
+
+
+                <div class="metric">
+
+                    <div class="label">
+                        Depth
+                    </div>
+
+                    <div id="auvDepth"
+                         class="metric-value">
+
+                        --
+
+                    </div>
+
+                    <div class="metric-small">
+                        Metres
+                    </div>
+
+                </div>
+
+
+
+                <div class="metric">
+
+                    <div class="label">
+                        Heading
+                    </div>
+
+                    <div id="auvHeading"
+                         class="metric-value">
+
+                        --
+
+                    </div>
+
+                    <div class="metric-small">
+                        Degrees
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- MAP -->
+
+        <section class="card map-card">
+
+            <div class="card-title">
+                Incident & AUV Location
+            </div>
+
+            <div id="authorityMap"></div>
+
+        </section>
+
+
+
+        <!-- MODULE STATUS -->
+
+        <section class="card">
+
+            <div class="card-title">
+                Module Status
+            </div>
+
+
+            <div class="status-list">
+
+
+                <div class="status-row">
+
+                    <div class="status-left">
+
+                        <span id="sarDot"
+                              class="status-dot"></span>
+
+                        Search & Rescue
+
+                    </div>
+
+                    <div id="sarStatus"
+                         class="status-text">
+
+                        MONITORING
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="status-row">
+
+                    <div class="status-left">
+
+                        <span id="floodDot"
+                              class="status-dot"></span>
+
+                        Flood Early Warning
+
+                    </div>
+
+                    <div id="floodStatus"
+                         class="status-text">
+
+                        MONITORING
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="status-row">
+
+                    <div class="status-left">
+
+                        <span id="pollutionDot"
+                              class="status-dot"></span>
+
+                        Pollution Monitoring
+
+                    </div>
+
+                    <div id="pollutionStatus"
+                         class="status-text">
+
+                        MONITORING
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ENVIRONMENTAL INTELLIGENCE -->
+
+        <section class="card">
+
+            <div class="card-title">
+                Environmental Intelligence
+            </div>
+
+
+            <div class="metrics">
+
+
+                <div class="metric">
+
+                    <div class="label">
+                        Water Level
+                    </div>
+
+                    <div id="waterLevel"
+                         class="metric-value">
+
+                        --
+
+                    </div>
+
+                    <div class="metric-small">
+                        Metres
+                    </div>
+
+                </div>
+
+
+
+                <div class="metric">
+
+                    <div class="label">
+                        Flood Risk
+                    </div>
+
+                    <div id="floodRisk"
+                         class="metric-value">
+
+                        --
+
+                    </div>
+
+                    <div class="metric-small">
+                        Random Forest classification
+                    </div>
+
+                </div>
+
+
+
+                <div class="metric">
+
+                    <div class="label">
+                        Rainfall
+                    </div>
+
+                    <div id="rainfall"
+                         class="metric-value">
+
+                        --
+
+                    </div>
+
+                    <div class="metric-small">
+                        mm
+                    </div>
+
+                </div>
+
+
+
+                <div class="metric">
+
+                    <div class="label">
+                        River Discharge
+                    </div>
+
+                    <div id="riverDischarge"
+                         class="metric-value">
+
+                        --
+
+                    </div>
+
+                    <div class="metric-small">
+                        m³/s
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ALERT HISTORY -->
+
+        <section class="card map-card">
+
+            <div class="card-title">
+                Alert History
+            </div>
+
+
+            <table class="incident-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Time
+                        </th>
+
+                        <th>
+                            Type
+                        </th>
+
+                        <th>
+                            Risk
+                        </th>
+
+                        <th>
+                            Location
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="alertHistory">
+
+                    <tr>
+
+                        <td colspan="5"
+                            class="empty">
+
+                            No alerts recorded yet.
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+
+    </div>
+
+
+    <div class="footer">
+
+        AquaSentinel Local Authority Decision-Support Interface
+
+    </div>
+
+
+</main>
+
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+<script>
+
+
+let authorityMap = null;
+
+let auvMarker = null;
+
+let incidentMarker = null;
+
+let alertHistory = [];
+
+let lastAlertKey = "";
+
+
+
+/* NUMBER FORMAT */
+
+function formatNumber(
+    value,
+    digits = 3
+) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        isNaN(value)
+    ) {
+
+        return "--";
+
+    }
+
+    return Number(value).toFixed(
+        digits
+    );
+
+}
+
+
+
+/* ALERT LOCATION */
+
+function getAlertLocation(
+    alert
+) {
+
+    if (
+        !alert ||
+        !alert.location
+    ) {
+
+        return null;
+
+    }
+
+
+    const latitude =
+        Number(
+            alert.location.latitude
+        );
+
+
+    const longitude =
+        Number(
+            alert.location.longitude
+        );
+
+
+    if (
+        isNaN(latitude) ||
+        isNaN(longitude)
+    ) {
+
+        return null;
+
+    }
+
+
+    return {
+
+        latitude:
+            latitude,
+
+        longitude:
+            longitude
+
+    };
+
+}
+
+
+
+/* INITIALIZE MAP */
+
+function initializeMap() {
+
+    authorityMap =
+        L.map(
+            "authorityMap"
+        ).setView(
+            [
+                12.90,
+                74.80
+            ],
+            12
+        );
+
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+
+            maxZoom: 19,
+
+            attribution:
+                "&copy; OpenStreetMap contributors"
+
+        }
+    ).addTo(
+        authorityMap
+    );
+
+}
+
+
+
+/* UPDATE MAP */
+
+function updateMap(
+    navigation,
+    authorityAlert
+) {
+
+    if (!authorityMap) {
+
+        return;
+
+    }
+
+
+    const position =
+        navigation.position || {};
+
+
+    const latitude =
+        Number(
+            position.latitude
+        );
+
+
+    const longitude =
+        Number(
+            position.longitude
+        );
+
+
+    if (
+        !isNaN(latitude) &&
+        !isNaN(longitude)
+    ) {
+
+
+        if (!auvMarker) {
+
+            auvMarker =
+                L.marker(
+                    [
+                        latitude,
+                        longitude
+                    ]
+                ).addTo(
+                    authorityMap
+                );
+
+
+            auvMarker.bindPopup(
+                "<b>AquaSentinel AUV</b><br>" +
+                "Current AUV position"
+            );
+
+        } else {
+
+            auvMarker.setLatLng(
+                [
+                    latitude,
+                    longitude
+                ]
+            );
+
+        }
+
+    }
+
+
+    const alertLocation =
+        getAlertLocation(
+            authorityAlert
+        );
+
+
+    if (alertLocation) {
+
+
+        if (!incidentMarker) {
+
+            incidentMarker =
+                L.circleMarker(
+                    [
+                        alertLocation.latitude,
+                        alertLocation.longitude
+                    ],
+                    {
+
+                        radius: 9,
+
+                        weight: 2
+
+                    }
+                ).addTo(
+                    authorityMap
+                );
+
+        } else {
+
+            incidentMarker.setLatLng(
+                [
+                    alertLocation.latitude,
+                    alertLocation.longitude
+                ]
+            );
+
+        }
+
+
+        incidentMarker.bindPopup(
+
+            "<b>LOCAL AUTHORITY ALERT</b><br>" +
+
+            "Type: " +
+            (
+                authorityAlert.type ||
+                "--"
+            ) +
+
+            "<br>Risk: " +
+
+            (
+                authorityAlert.risk ||
+                "--"
+            )
+
+        );
+
+
+        authorityMap.setView(
+            [
+                alertLocation.latitude,
+                alertLocation.longitude
+            ],
+            13
+        );
+
+    }
+
+}
+
+
+
+/* UPDATE AUTHORITY ALERT */
+
+function updateAuthorityAlert(
+    alert
+) {
+
+    const card =
+        document.getElementById(
+            "alertCard"
+        );
+
+
+    const title =
+        document.getElementById(
+            "alertTitle"
+        );
+
+
+    const risk =
+        document.getElementById(
+            "alertRisk"
+        );
+
+
+    const type =
+        document.getElementById(
+            "alertType"
+        );
+
+
+    const latitude =
+        document.getElementById(
+            "alertLat"
+        );
+
+
+    const longitude =
+        document.getElementById(
+            "alertLon"
+        );
+
+
+    const smsStatus =
+        document.getElementById(
+            "smsStatus"
+        );
+
+
+    const action =
+        document.getElementById(
+            "alertAction"
+        );
+
+
+
+    if (
+        !alert ||
+        alert.status !== "ALERT SENT"
+    ) {
+
+        card.className =
+            "alert-card";
+
+
+        title.textContent =
+            "No Active Alert";
+
+
+        risk.textContent =
+            "--";
+
+
+        type.textContent =
+            "--";
+
+
+        latitude.textContent =
+            "--";
+
+
+        longitude.textContent =
+            "--";
+
+
+        smsStatus.textContent =
+            "NOT SENT";
+
+
+        action.textContent =
+            "Monitoring system";
+
+
+        return;
+
+    }
+
+
+
+    card.className =
+        "alert-card active";
+
+
+    title.textContent =
+        "LOCAL AUTHORITY ALERT";
+
+
+    risk.textContent =
+        alert.risk ||
+        "--";
+
+
+    type.textContent =
+        alert.type ||
+        "--";
+
+
+
+    const location =
+        getAlertLocation(
+            alert
+        );
+
+
+    if (location) {
+
+        latitude.textContent =
+            location.latitude.toFixed(
+                6
+            );
+
+        longitude.textContent =
+            location.longitude.toFixed(
+                6
+            );
+
+    } else {
+
+        latitude.textContent =
+            "--";
+
+        longitude.textContent =
+            "--";
+
+    }
+
+
+
+    /*
+       SMS STATUS
+
+       SENT / ALREADY_SENT
+       are shown to the authority
+       as SMS RECEIVED.
+
+       FAILED is shown separately.
+
+       NOT_CONFIGURED means Twilio
+       credentials have not been added.
+    */
+
+    if (
+        alert.sms_status === "SENT" ||
+        alert.sms_status === "ALREADY_SENT"
+    ) {
+
+        smsStatus.textContent =
+            "SMS RECEIVED";
+
+    } else if (
+        alert.sms_status === "FAILED"
+    ) {
+
+        smsStatus.textContent =
+            "SMS FAILED";
+
+    } else if (
+        alert.sms_status === "NOT_CONFIGURED"
+    ) {
+
+        smsStatus.textContent =
+            "SMS NOT CONFIGURED";
+
+    } else {
+
+        smsStatus.textContent =
+            "NOT SENT";
+
+    }
+
+
+
+    action.textContent =
+        alert.action ||
+        "Review incident and initiate appropriate response";
+
+}
+
+
+
+/* MODULE STATUS */
+
+function setModuleStatus(
+    dotId,
+    textId,
+    state,
+    text
+) {
+
+    const dot =
+        document.getElementById(
+            dotId
+        );
+
+
+    const status =
+        document.getElementById(
+            textId
+        );
+
+
+    dot.className =
+        "status-dot " +
+        state;
+
+
+    status.textContent =
+        text;
+
+}
+
+
+
+/* UPDATE MODULE STATUS */
+
+function updateModuleStatus(
+    data
+) {
+
+    const sar =
+        data.sar ||
+        {};
+
+
+    const flood =
+        data.flood ||
+        {};
+
+
+    const pollution =
+        data.pollution ||
+        {};
+
+
+
+    if (
+        sar.detected ||
+        sar.alert ||
+        sar.survivor_detected
+    ) {
+
+        setModuleStatus(
+            "sarDot",
+            "sarStatus",
+            "danger",
+            "ALERT"
+        );
+
+    } else {
+
+        setModuleStatus(
+            "sarDot",
+            "sarStatus",
+            "ok",
+            "MONITORING"
+        );
+
+    }
+
+
+
+    const floodRisk =
+        String(
+            flood.risk ||
+            ""
+        ).toUpperCase();
+
+
+
+    if (
+        floodRisk === "HIGH"
+    ) {
+
+        setModuleStatus(
+            "floodDot",
+            "floodStatus",
+            "danger",
+            "HIGH RISK"
+        );
+
+    } else if (
+        floodRisk === "MEDIUM"
+    ) {
+
+        setModuleStatus(
+            "floodDot",
+            "floodStatus",
+            "warning",
+            "WARNING"
+        );
+
+    } else {
+
+        setModuleStatus(
+            "floodDot",
+            "floodStatus",
+            "ok",
+            "NORMAL"
+        );
+
+    }
+
+
+
+    if (
+        pollution.alert
+    ) {
+
+        setModuleStatus(
+            "pollutionDot",
+            "pollutionStatus",
+            "danger",
+            "ALERT"
+        );
+
+    } else if (
+        String(
+            pollution.status ||
+            ""
+        ).toLowerCase() ===
+        "unavailable"
+    ) {
+
+        setModuleStatus(
+            "pollutionDot",
+            "pollutionStatus",
+            "warning",
+            "UNAVAILABLE"
+        );
+
+    } else {
+
+        setModuleStatus(
+            "pollutionDot",
+            "pollutionStatus",
+            "ok",
+            "MONITORING"
+        );
+
+    }
+
+}
+
+
+
+/* AUV SUMMARY */
+
+function updateSummary(
+    navigation
+) {
+
+    const position =
+        navigation.position || {};
+
+
+    document.getElementById(
+        "auvLat"
+    ).textContent =
+        formatNumber(
+            position.latitude,
+            5
+        );
+
+
+    document.getElementById(
+        "auvLon"
+    ).textContent =
+        formatNumber(
+            position.longitude,
+            5
+        );
+
+
+    document.getElementById(
+        "auvDepth"
+    ).textContent =
+        formatNumber(
+            position.depth_m,
+            1
+        );
+
+
+    document.getElementById(
+        "auvHeading"
+    ).textContent =
+        formatNumber(
+            navigation.heading_deg,
+            1
+        );
+
+}
+
+
+
+/* ENVIRONMENTAL DATA */
+
+function updateEnvironmentalData(
+    flood
+) {
+
+    document.getElementById(
+        "waterLevel"
+    ).textContent =
+        flood.water_level !== undefined
+            ? formatNumber(
+                flood.water_level,
+                2
+            )
+            : "--";
+
+
+    document.getElementById(
+        "floodRisk"
+    ).textContent =
+        flood.risk ||
+        "--";
+
+
+    document.getElementById(
+        "rainfall"
+    ).textContent =
+        flood.rainfall_mm !== undefined
+            ? formatNumber(
+                flood.rainfall_mm,
+                2
+            )
+            : "--";
+
+
+    document.getElementById(
+        "riverDischarge"
+    ).textContent =
+        flood.river_discharge !== undefined
+            ? formatNumber(
+                flood.river_discharge,
+                2
+            )
+            : "--";
+
+}
+
+
+
+/* ALERT HISTORY */
+
+function addAlertToHistory(
+    alert
+) {
+
+    if (
+        !alert ||
+        alert.status !== "ALERT SENT"
+    ) {
+
+        lastAlertKey = "";
+
+        return;
+
+    }
+
+
+    const location =
+        getAlertLocation(
+            alert
+        );
+
+
+    const key =
+        String(
+            alert.type ||
+            ""
+        ) +
+        "|" +
+        String(
+            alert.risk ||
+            ""
+        ) +
+        "|" +
+        String(
+            alert.action ||
+            ""
+        );
+
+
+    if (
+        key === lastAlertKey
+    ) {
+
+        return;
+
+    }
+
+
+    lastAlertKey =
+        key;
+
+
+    alertHistory.unshift({
+
+        time:
+            new Date()
+                .toLocaleTimeString(),
+
+        type:
+            alert.type ||
+            "--",
+
+        risk:
+            alert.risk ||
+            "--",
+
+        location:
+            location
+                ? location.latitude.toFixed(5) +
+                  ", " +
+                  location.longitude.toFixed(5)
+                : "--",
+
+        action:
+            alert.action ||
+            "--"
+
+    });
+
+
+    if (
+        alertHistory.length >
+        10
+    ) {
+
+        alertHistory.pop();
+
+    }
+
+
+    renderAlertHistory();
+
+}
+
+
+
+/* RENDER ALERT HISTORY */
+
+function renderAlertHistory() {
+
+    const tbody =
+        document.getElementById(
+            "alertHistory"
+        );
+
+
+    if (
+        alertHistory.length === 0
+    ) {
+
+        tbody.innerHTML =
+            '<tr>' +
+
+            '<td colspan="5" class="empty">' +
+
+            'No alerts recorded yet.' +
+
+            '</td>' +
+
+            '</tr>';
+
+        return;
+
+    }
+
+
+    tbody.innerHTML =
+        alertHistory
+            .map(
+                function(item) {
+
+                    return (
+
+                        "<tr>" +
+
+                        "<td>" +
+                        item.time +
+                        "</td>" +
+
+                        "<td>" +
+                        item.type +
+                        "</td>" +
+
+                        "<td>" +
+                        item.risk +
+                        "</td>" +
+
+                        "<td>" +
+                        item.location +
+                        "</td>" +
+
+                        "<td>" +
+                        item.action +
+                        "</td>" +
+
+                        "</tr>"
+
+                    );
+
+                }
+            )
+            .join("");
+
+}
+
+
+
+/* LOAD DATA */
+
+async function loadDashboardData() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/data?ts=" +
+                Date.now(),
+                {
+                    cache:
+                        "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const navigation =
+            data.navigation ||
+            {};
+
+
+        const flood =
+            data.flood ||
+            {};
+
+
+        const authorityAlert =
+            data.authority_alert ||
+            {};
+
+
+
+        updateAuthorityAlert(
+            authorityAlert
+        );
+
+
+        updateSummary(
+            navigation
+        );
+
+
+        updateEnvironmentalData(
+            flood
+        );
+
+
+        updateModuleStatus(
+            data
+        );
+
+
+        updateMap(
+            navigation,
+            authorityAlert
+        );
+
+
+        addAlertToHistory(
+            authorityAlert
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Authority dashboard error:",
+            error
+        );
+
+    }
+
+}
+
+
+
+/* START DASHBOARD */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        initializeMap();
+
+        loadDashboardData();
+
+
+        setInterval(
+            loadDashboardData,
+            2000
+        );
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>
